@@ -1106,6 +1106,9 @@ namespace BinaryNinja
 	template <>
 	struct HighLevelILInstructionAccessor<HLIL_UNIMPL> : public HighLevelILInstructionBase
 	{};
+	template <>
+	struct HighLevelILInstructionAccessor<HLIL_UNREACHABLE> : public HighLevelILInstructionBase
+	{};
 
 	template <>
 	struct HighLevelILInstructionAccessor<HLIL_CONST> : public HighLevelILConstantInstruction

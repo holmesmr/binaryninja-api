@@ -1253,6 +1253,10 @@ extern "C"
 		HLIL_FCMP_O,
 		HLIL_FCMP_UO,
 
+		// Unreachable hint, typically used in switch statements that analysis knows
+		// has an unreachable default.
+		HLIL_UNREACHABLE,
+
 		// The following instructions are only used in SSA form
 		HLIL_WHILE_SSA,
 		HLIL_DO_WHILE_SSA,
