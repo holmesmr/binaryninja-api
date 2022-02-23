@@ -2023,6 +2023,25 @@ extern "C"
 		size_t typeCount, variableCount, functionCount;
 	};
 
+	enum BNTypeParserErrorSeverity
+	{
+		IgnoredSeverity = 0,
+		NoteSeverity = 1,
+		RemarkSeverity = 2,
+		WarningSeverity = 3,
+		ErrorSeverity = 4,
+		FatalSeverity = 5,
+	};
+
+	struct BNTypeParserError
+	{
+		BNTypeParserErrorSeverity severity;
+		char* message;
+		char* fileName;
+		uint64_t line;
+		uint64_t column;
+	};
+
 	struct BNQualifiedNameList
 	{
 		BNQualifiedName* names;
@@ -5203,8 +5222,12 @@ extern "C"
 	BINARYNINJACOREAPI bool BNParseTypesFromSourceFile(BNPlatform* platform, const char* fileName,
 	    BNTypeParserResult* result, char** errors, const char** includeDirs, size_t includeDirCount,
 	    const char* autoTypeSource);
+	BINARYNINJACOREAPI bool BNClangParseTypes(BNPlatform* platform, const char* source,
+	    const char* fileName, const char* const* commandLineArgs, size_t commandLineArgsCount,
+	    const char* const* includeDirs, size_t includeDirCount, const char* autoTypeSource,
+	    BNTypeParserResult* result, BNTypeParserError** errors, size_t* errorCount);
 	BINARYNINJACOREAPI void BNFreeTypeParserResult(BNTypeParserResult* result);
-
+	BINARYNINJACOREAPI void BNFreeTypeParserErrors(BNTypeParserError* errors, size_t count);
 	// Updates
 	BINARYNINJACOREAPI BNUpdateChannel* BNGetUpdateChannels(size_t* count, char** errors);
 	BINARYNINJACOREAPI void BNFreeUpdateChannelList(BNUpdateChannel* list, size_t count);
