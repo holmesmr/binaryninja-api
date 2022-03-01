@@ -2,27 +2,17 @@
 
 # Binary Ninja API
 
-This repository contains documentation and source code for the [Binary Ninja](https://binary.ninja/) reverse engineering platform API.
+This repository contains documentation and source code for the [Binary Ninja](https://binary.ninja/) reverse engineering platform API. There is online documentation for both the [stable branch](https://api.binary.ninja/) and [dev branch](https://dev-api.binary.ninja).
 
 ## Branches
 
-Please note that the [dev](/Vector35/binaryninja-api/tree/dev/) branch tracks changes on the `dev` build of Binary Ninja and is generally the place where all pull requests should be submitted to. However, the [master](/Vector35/binaryninja-api/tree/master/) branch tracks the `stable` build of Binary Ninja which is the default version run after installation. There is online documentation for both the [stable branch](https://api.binary.ninja/) and [dev branch](https://dev-api.binary.ninja).
+This repository has two primary branches [`dev`](/Vector35/binaryninja-api/tree/dev/) and [`master`](/Vector35/binaryninja-api/tree/master/).
 
-## Contributing
-
-Public contributions are welcome to this repository. All the API and documentation in this repository is licensed under an MIT license, however, the API interfaces with a closed-source commercial application, [Binary Ninja](https://binary.ninja).
-
-If you're interested in contributing when you submit your first PR, you'll receive a notice from [CLA Assistant](https://cla-assistant.io/) that allows you to sign our [Contribution License Agreement](https://binary.ninja/cla.pdf) online.
-
-## Issues
-
-The issue tracker for this repository tracks not only issues with the source code contained here but also the broader Binary Ninja product.
+The `dev` branch has the latest updates and tracks the latest development build of Binary Ninja; pull requests should be made against this branch. The `master` branch tracks the stable build of Binary Ninja. If you have just installed Binary Ninja for the first time, you are likely on the stable release channel.
 
 ## Usage and Build Instructions
 
-To write Binary Ninja plugins using C++, you'll need to build the C++ API found in the root of this repo. The C++ API is built into a static library, which plugins and programs can then link against. The compiled API contains names and functions you can use from your plugins, but most of the implementation is missing until you link against the `binaryninjacore` library.
-
-Building the API library is done similarly to most CMake-based projects; the basic steps are outlined as follows:
+To write Binary Ninja plugins using C++, you'll need to build the C++ API. Building the API library is done similarly to most CMake-based projects; the basic steps are outlined as follows:
 
 ```Bash
 # Get the source
@@ -31,13 +21,13 @@ cd binaryninja-api
 git submodule update --init --recursive
 
 # Configure an out-of-source build setup
-cmake -S . -B build # <additional arguments here>
+cmake -S . -B build # (additional arguments go here if needed)
 
 # Compile
 cmake --build build -j8
 ```
 
-In addition to the default build setup you may want to:
+In addition to the default build setup, you may want to:
 
 - **Build examples.** To build the [API examples](#examples), pass `-DBN_API_BUILD_EXAMPLES=ON` to CMake when configuring the build. After the build succeeds, you can install the built plugins by running the `install` target. When using the "Unix Makefiles" build generator, this looks like: `make install`.
 - **Build UI plugins.** You will need Qt 6.1.3 (as of writing) installed to build UI plugins.
@@ -61,6 +51,16 @@ There are many examples available. The [Python examples folder ](https://github.
 * [triage](https://github.com/Vector35/binaryninja-api/tree/dev/examples/triage) is a fully featured plugin that is shipped and enabled by default, demonstrating how to do a wide variety of tasks including extending the UI through QT
 * [workflows](https://github.com/Vector35/binaryninja-api/tree/dev/examples/workflows) is a collection of plugins that demonstrate using Workflows to extend the analysis pipeline
 * [x86 extension](https://github.com/Vector35/binaryninja-api/tree/dev/examples/x86_extension) creates an architecture extension which shows how to modify the behavior of the build-in architectures without creating a complete replacement
+
+## Issues
+
+The issue tracker for this repository tracks not only issues with the source code contained here but also the broader Binary Ninja product.
+
+## Contributing
+
+Public contributions are welcome to this repository. All the API and documentation in this repository is licensed under an MIT license, however, the API interfaces with a closed-source commercial application, [Binary Ninja](https://binary.ninja).
+
+If you're interested in contributing when you submit your first PR, you'll receive a notice from [CLA Assistant](https://cla-assistant.io/) that allows you to sign our [Contribution License Agreement](https://binary.ninja/cla.pdf) online.
 
 ## Licensing
 
