@@ -2920,6 +2920,22 @@ namespace BinaryNinja {
 		}
 	};
 
+	struct TypeParserResult
+	{
+		std::map<QualifiedName, Ref<Type>> types;
+		std::map<QualifiedName, Ref<Type>> variables;
+		std::map<QualifiedName, Ref<Type>> functions;
+	};
+
+	struct TypeParserError
+	{
+		BNTypeParserErrorSeverity severity;
+		std::string message;
+		std::string fileName;
+		uint64_t line;
+		uint64_t column;
+	};
+
 	class Type : public CoreRefCountObject<BNType, BNNewTypeReference, BNFreeType>
 	{
 	  public:
@@ -5503,6 +5519,9 @@ namespace BinaryNinja {
 		    std::map<QualifiedName, Ref<Type>>& variables, std::map<QualifiedName, Ref<Type>>& functions,
 		    std::string& errors, const std::vector<std::string>& includeDirs = std::vector<std::string>(),
 		    const std::string& autoTypeSource = "");
+		bool ParseTypesClang(const std::string& source, const std::string& fileName,
+		    const std::vector<std::string>& commandLineArgs, const std::vector<std::string>& includeDirs,
+		    const std::string& autoTypeSource, TypeParserResult& result, std::vector<TypeParserError>& errors);
 	};
 
 	// DownloadProvider

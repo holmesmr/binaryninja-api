@@ -505,3 +505,78 @@ bool Platform::ParseTypesFromSourceFile(const string& fileName, map<QualifiedNam
 	BNFreeTypeParserResult(&result);
 	return true;
 }
+
+
+bool Platform::ParseTypesClang(const std::string& source, const std::string& fileName,
+    const std::vector<std::string>& commandLineArgs, const std::vector<std::string>& includeDirs,
+    const std::string& autoTypeSource, TypeParserResult& result, std::vector<TypeParserError>& errors)
+{
+	const char** apiCommandLineArgs = new const char*[commandLineArgs.size()];
+	for (size_t i = 0; i < commandLineArgs.size(); ++i)
+	{
+		apiCommandLineArgs[i] = commandLineArgs[i].c_str();
+	}
+	const char** apiIncludeDirs = new const char*[includeDirs.size()];
+	for (size_t i = 0; i < includeDirs.size(); ++i)
+	{
+		apiIncludeDirs[i] = includeDirs[i].c_str();
+	}
+
+	BNTypeParserResult apiResult;
+	BNTypeParserError* apiErrors;
+	size_t errorCount;
+
+	auto success = BNClangParseTypes(m_object, source.c_str(), fileName.c_str(), apiCommandLineArgs,
+	    commandLineArgs.size(), apiIncludeDirs, includeDirs.size(), autoTypeSource.c_str(), &apiResult,
+	    &apiErrors, &errorCount);
+
+	delete [] apiCommandLineArgs;
+	delete [] apiIncludeDirs;
+
+	if (!success)
+	{
+		for (size_t i = 0; i < errorCount; i ++)
+		{
+			TypeParserError error;
+			error.severity =  apiErrors[i].severity,
+			error.message =  apiErrors[i].message,
+			error.fileName =  apiErrors[i].fileName,
+			error.line =  apiErrors[i].line,
+			error.column =  apiErrors[i].column,
+			errors.push_back(error);
+		}
+		BNFreeTypeParserErrors(apiErrors, errorCount);
+		return false;
+	}
+
+	result.types.clear();
+	for (size_t i = 0; i < apiResult.typeCount; ++i)
+	{
+		result.types.insert({
+			QualifiedName::FromAPIObject(&apiResult.types[i].name),
+			new Type(BNNewTypeReference(apiResult.types[i].type))
+		});
+	}
+
+	result.variables.clear();
+	for (size_t i = 0; i < apiResult.variableCount; ++i)
+	{
+		result.variables.insert({
+			QualifiedName::FromAPIObject(&apiResult.variables[i].name),
+			new Type(BNNewTypeReference(apiResult.variables[i].type))
+		});
+	}
+
+	result.functions.clear();
+	for (size_t i = 0; i < apiResult.functionCount; ++i)
+	{
+		result.functions.insert({
+			QualifiedName::FromAPIObject(&apiResult.functions[i].name),
+			new Type(BNNewTypeReference(apiResult.functions[i].type))
+		});
+	}
+
+	BNFreeTypeParserResult(&apiResult);
+	return true;
+}
+
