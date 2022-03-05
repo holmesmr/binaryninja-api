@@ -19,7 +19,7 @@
 # IN THE SOFTWARE.
 
 import ctypes
-from typing import Generator, List, Union, Mapping, Tuple, Optional, Iterable
+from typing import Generator, List, Union, Mapping, Tuple, Optional, Iterable, Dict
 from dataclasses import dataclass
 import uuid
 from abc import abstractmethod
@@ -28,7 +28,8 @@ from abc import abstractmethod
 from . import _binaryninjacore as core
 from .enums import (
     StructureVariant, SymbolType, SymbolBinding, TypeClass, NamedTypeReferenceClass, ReferenceType, VariableSourceType,
-    TypeReferenceType, MemberAccess, MemberScope, TypeDefinitionLineType, TokenEscapingType
+    TypeReferenceType, MemberAccess, MemberScope, TypeDefinitionLineType, TokenEscapingType,
+    NameType
 )
 from . import callingconvention
 from . import function as _function
@@ -873,7 +874,10 @@ class FunctionBuilder(TypeBuilder):
 	    cls, return_type: Optional[SomeType] = None,
 	    calling_convention: Optional['callingconvention.CallingConvention'] = None, params: Optional[ParamsType] = None,
 	    var_args: BoolWithConfidenceType = False, stack_adjust: OffsetWithConfidenceType = 0,
-	    platform: '_platform.Platform' = None, confidence: int = core.max_confidence
+	    platform: '_platform.Platform' = None, confidence: int = core.max_confidence,
+	    can_return: BoolWithConfidence = True, reg_stack_adjust: Optional[Dict['architecture.RegisterName', OffsetWithConfidenceType]] = None,
+	    return_regs: Optional[Union['RegisterSet', List['architecture.RegisterType']]] = None,
+	    name_type: 'NameType' = NameType.NoNameType
 	) -> 'FunctionBuilder':
 		param_buf = FunctionBuilder._to_core_struct(params)
 		if return_type is None:
@@ -889,12 +893,37 @@ class FunctionBuilder(TypeBuilder):
 			conv_conf.convention = calling_convention.handle
 			conv_conf.confidence = calling_convention.confidence
 
+		if reg_stack_adjust is None:
+			reg_stack_adjust = {}
+		reg_stack_adjust_regs = (ctypes.c_uint32 * len(reg_stack_adjust))()
+		reg_stack_adjust_values = (core.BNOffsetWithConfidence * len(reg_stack_adjust))()
+
+		for i, (reg, adjust) in enumerate(reg_stack_adjust.items()):
+			reg_stack_adjust_regs[i] = reg
+			reg_stack_adjust_values[i].value = adjust.value
+			reg_stack_adjust_values[i].confidence = adjust.confidence
+
+		return_regs_set = core.BNRegisterSetWithConfidence()
+		if return_regs is None or platform is None:
+			return_regs_set.count = 0
+			return_regs_set.confidence = 0
+		else:
+			return_regs_set.count = len(return_regs)
+			return_regs_set.confidence = 255
+			return_regs_set.regs = (ctypes.c_uint32 * len(return_regs))()
+
+			for i, reg in enumerate(return_regs):
+				return_regs_set[i] = platform.arch.get_reg_index(reg)
+
 		vararg_conf = BoolWithConfidence.get_core_struct(var_args)
+		can_return_conf = BoolWithConfidence.get_core_struct(can_return)
 		stack_adjust_conf = OffsetWithConfidence.get_core_struct(stack_adjust)
 		if params is None:
 			params = []
 		handle = core.BNCreateFunctionTypeBuilder(
-		    ret_conf, conv_conf, param_buf, len(params), vararg_conf, stack_adjust_conf
+		    ret_conf, conv_conf, param_buf, len(params), vararg_conf, can_return_conf, stack_adjust_conf,
+		    reg_stack_adjust_regs, reg_stack_adjust_values, len(reg_stack_adjust),
+		    return_regs_set, name_type
 		)
 		assert handle is not None, "BNCreateFunctionTypeBuilder returned None"
 		return cls(handle, platform, confidence)
@@ -2373,7 +2402,10 @@ class FunctionType(Type):
 	    calling_convention: 'callingconvention.CallingConvention' = None,
 	    variable_arguments: BoolWithConfidenceType = BoolWithConfidence(False),
 	    stack_adjust: OffsetWithConfidence = OffsetWithConfidence(0), platform: '_platform.Platform' = None,
-	    confidence: int = core.max_confidence
+	    confidence: int = core.max_confidence,
+	    can_return: BoolWithConfidence = True, reg_stack_adjust: Optional[Dict['architecture.RegisterName', OffsetWithConfidenceType]] = None,
+	    return_regs: Optional[Union['RegisterSet', List['architecture.RegisterType']]] = None,
+	    name_type: 'NameType' = NameType.NoNameType
 	) -> 'FunctionType':
 		if ret is None:
 			ret = VoidType.create()
@@ -2392,9 +2424,38 @@ class FunctionType(Type):
 		_variable_arguments = BoolWithConfidence.get_core_struct(variable_arguments)
 		_stack_adjust = OffsetWithConfidence.get_core_struct(stack_adjust)
 
+
+		if reg_stack_adjust is None:
+			reg_stack_adjust = {}
+		reg_stack_adjust_regs = (ctypes.c_uint32 * len(reg_stack_adjust))()
+		reg_stack_adjust_values = (core.BNOffsetWithConfidence * len(reg_stack_adjust))()
+
+		for i, (reg, adjust) in enumerate(reg_stack_adjust.items()):
+			reg_stack_adjust_regs[i] = reg
+			reg_stack_adjust_values[i].value = adjust.value
+			reg_stack_adjust_values[i].confidence = adjust.confidence
+
+		return_regs_set = core.BNRegisterSetWithConfidence()
+		if return_regs is None or platform is None:
+			return_regs_set.count = 0
+			return_regs_set.confidence = 0
+		else:
+			return_regs_set.count = len(return_regs)
+			return_regs_set.confidence = 255
+			return_regs_set.regs = (ctypes.c_uint32 * len(return_regs))()
+
+			for i, reg in enumerate(return_regs):
+				return_regs_set[i] = platform.arch.get_reg_index(reg)
+
+		_can_return = BoolWithConfidence.get_core_struct(can_return)
+		if params is None:
+			params = []
 		func_type = core.BNCreateFunctionType(
-		    ret_conf, conv_conf, param_buf, len(params), _variable_arguments, _stack_adjust
+			ret_conf, conv_conf, param_buf, len(params), _variable_arguments, _can_return, _stack_adjust,
+			reg_stack_adjust_regs, reg_stack_adjust_values, len(reg_stack_adjust),
+			return_regs_set, name_type
 		)
+
 		assert func_type is not None, f"core.BNCreateFunctionType returned None {ret_conf} {conv_conf} {param_buf} {_variable_arguments} {_stack_adjust}"
 		return cls(core.BNNewTypeReference(func_type), platform, confidence)
 

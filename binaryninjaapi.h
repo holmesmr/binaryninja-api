@@ -2892,12 +2892,32 @@ namespace BinaryNinja {
 		Confidence<Ref<Type>> type;
 		bool defaultLocation;
 		Variable location;
+
+		FunctionParameter() = default;
+		FunctionParameter(const std::string& name, Confidence<Ref<Type>> type): name(name), type(type), defaultLocation(true)
+		{}
+
+		FunctionParameter(const std::string& name, const Confidence<Ref<Type>>& type, bool defaultLocation,
+		    const Variable& location):
+		    name(name), type(type), defaultLocation(defaultLocation), location(location)
+		{}
 	};
 
 	struct QualifiedNameAndType
 	{
 		QualifiedName name;
 		Ref<Type> type;
+
+		QualifiedNameAndType() = default;
+		QualifiedNameAndType(const std::string& name, const Ref<Type>& type): name(name), type(type)
+		{}
+		QualifiedNameAndType(const QualifiedName& name, const Ref<Type>& type): name(name), type(type)
+		{}
+
+		bool operator<(const QualifiedNameAndType& other) const
+		{
+			return name < other.name;
+		}
 	};
 
 	class Type : public CoreRefCountObject<BNType, BNNewTypeReference, BNFreeType>
@@ -2979,6 +2999,15 @@ namespace BinaryNinja {
 		    const Confidence<Ref<CallingConvention>>& callingConvention, const std::vector<FunctionParameter>& params,
 		    const Confidence<bool>& varArg = Confidence<bool>(false, 0),
 		    const Confidence<int64_t>& stackAdjust = Confidence<int64_t>(0, 0));
+		static Ref<Type> FunctionType(const Confidence<Ref<Type>>& returnValue,
+		    const Confidence<Ref<CallingConvention>>& callingConvention,
+		    const std::vector<FunctionParameter>& params,
+		    const Confidence<bool>& hasVariableArguments,
+		    const Confidence<bool>& canReturn,
+		    const Confidence<int64_t>& stackAdjust,
+		    const std::map<uint32_t, Confidence<int32_t>>& regStackAdjust = std::map<uint32_t, Confidence<int32_t>>(),
+		    const Confidence<std::vector<uint32_t>>& returnRegs = Confidence<std::vector<uint32_t>>(std::vector<uint32_t>(), 0),
+		    BNNameType ft = NoNameType);
 
 		static std::string GenerateAutoTypeId(const std::string& source, const QualifiedName& name);
 		static std::string GenerateAutoDemangledTypeId(const QualifiedName& name);
@@ -3124,6 +3153,15 @@ namespace BinaryNinja {
 		    const Confidence<Ref<CallingConvention>>& callingConvention, const std::vector<FunctionParameter>& params,
 		    const Confidence<bool>& varArg = Confidence<bool>(false, 0),
 		    const Confidence<int64_t>& stackAdjust = Confidence<int64_t>(0, 0));
+		static TypeBuilder FunctionType(const Confidence<Ref<Type>>& returnValue,
+		    const Confidence<Ref<CallingConvention>>& callingConvention,
+		    const std::vector<FunctionParameter>& params,
+		    const Confidence<bool>& hasVariableArguments,
+		    const Confidence<bool>& canReturn,
+		    const Confidence<int64_t>& stackAdjust,
+		    const std::map<uint32_t, Confidence<int32_t>>& regStackAdjust = std::map<uint32_t, Confidence<int32_t>>(),
+		    const Confidence<std::vector<uint32_t>>& returnRegs = Confidence<std::vector<uint32_t>>(std::vector<uint32_t>(), 0),
+		    BNNameType ft = NoNameType);
 
 		bool IsReferenceOfType(BNNamedTypeReferenceClass refType);
 		bool IsStructReference() { return IsReferenceOfType(StructNamedTypeClass); }
