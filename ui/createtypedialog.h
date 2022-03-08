@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QTextEdit>
 #include "binaryninjaapi.h"
 #include "dialogtextedit.h"
 #include "uicontext.h"
@@ -10,7 +11,9 @@ class BINARYNINJAUIAPI CreateTypeDialog : public QDialog
 {
 	Q_OBJECT
 
+	QLineEdit* m_arguments;
 	DialogTextEdit* m_code;
+	QTextEdit* m_errors;
 
 	BinaryViewRef m_data;
 	std::map<BinaryNinja::QualifiedName, TypeRef> m_results;
