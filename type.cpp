@@ -340,7 +340,7 @@ void QualifiedName::FreeAPIObject(BNQualifiedName* name)
 }
 
 
-QualifiedName QualifiedName::FromAPIObject(BNQualifiedName* name)
+QualifiedName QualifiedName::FromAPIObject(const BNQualifiedName* name)
 {
 	QualifiedName result;
 	for (size_t i = 0; i < name->nameCount; i++)

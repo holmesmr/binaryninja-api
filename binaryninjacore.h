@@ -167,6 +167,7 @@ extern "C"
 	struct BNDownloadInstance;
 	struct BNWebsocketProvider;
 	struct BNWebsocketClient;
+	struct BNTypeParser;
 	struct BNFlowGraph;
 	struct BNFlowGraphNode;
 	struct BNFlowGraphLayoutRequest;
@@ -1978,6 +1979,13 @@ extern "C"
 		BNType* type;
 	};
 
+	struct BNQualifiedNameTypeAndId
+	{
+		BNQualifiedName name;
+		char* id;
+		BNType* type;
+	};
+
 	struct BNStructureMember
 	{
 		BNType* type;
@@ -2406,6 +2414,27 @@ extern "C"
 	{
 		void* context;
 		void (*addAction)(void* ctxt, BNMainThreadAction* action);
+	};
+
+	struct BNTypeParserCallbacks
+	{
+		void* context;
+		bool (*parseTypesFromSource)(void* ctxt,
+			BNPlatform* platform, const char* source, const char* fileName,
+			const BNQualifiedNameTypeAndId* existingTypes, size_t existingTypeCount,
+			const char* const* options, size_t optionCount,
+			const char* const* includeDirs, size_t includeDirCount,
+			const char* autoTypeSource, BNTypeParserResult* result,
+			BNTypeParserError** errors, size_t* errorCount
+		);
+		bool (*parseTypeString)(void* ctxt,
+			BNPlatform* platform, const char* source,
+			const BNQualifiedNameTypeAndId* existingTypes, size_t existingTypeCount,
+			BNQualifiedNameAndType* result,
+			BNTypeParserError** errors, size_t* errorCount
+		);
+		void (*freeResult)(void* ctxt, BNTypeParserResult* result);
+		void (*freeErrorList)(void* ctxt, BNTypeParserError* errors, size_t errorCount);
 	};
 
 	struct BNConstantReference
@@ -4058,6 +4087,7 @@ extern "C"
 
 	BINARYNINJACOREAPI BNQualifiedNameAndType* BNGetAnalysisTypeList(BNBinaryView* view, size_t* count);
 	BINARYNINJACOREAPI void BNFreeTypeList(BNQualifiedNameAndType* types, size_t count);
+	BINARYNINJACOREAPI void BNFreeTypeIdList(BNQualifiedNameTypeAndId* types, size_t count);
 	BINARYNINJACOREAPI BNQualifiedName* BNGetAnalysisTypeNames(BNBinaryView* view, size_t* count, const char* matching);
 	BINARYNINJACOREAPI void BNFreeTypeNameList(BNQualifiedName* names, size_t count);
 	BINARYNINJACOREAPI BNType* BNGetAnalysisTypeByName(BNBinaryView* view, BNQualifiedName* name);
@@ -5226,10 +5256,30 @@ extern "C"
 	BINARYNINJACOREAPI bool BNParseTypesFromSourceFile(BNPlatform* platform, const char* fileName,
 	    BNTypeParserResult* result, char** errors, const char** includeDirs, size_t includeDirCount,
 	    const char* autoTypeSource);
-	BINARYNINJACOREAPI bool BNClangParseTypes(BNPlatform* platform, const char* source,
-	    const char* fileName, const char* const* commandLineArgs, size_t commandLineArgsCount,
-	    const char* const* includeDirs, size_t includeDirCount, const char* autoTypeSource,
-	    BNTypeParserResult* result, BNTypeParserError** errors, size_t* errorCount);
+
+	BINARYNINJACOREAPI BNTypeParser* BNRegisterTypeParser(
+		const char* name, BNTypeParserCallbacks* callbacks);
+	BINARYNINJACOREAPI BNTypeParser** BNGetTypeParserList(size_t* count);
+	BINARYNINJACOREAPI void BNFreeTypeParserList(BNTypeParser** parsers);
+	BINARYNINJACOREAPI BNTypeParser* BNGetTypeParserByName(const char* name);
+
+	BINARYNINJACOREAPI char* BNGetTypeParserName(BNTypeParser* parser);
+
+	BINARYNINJACOREAPI bool BNTypeParserParseTypesFromSource(BNTypeParser* parser,
+	    BNPlatform* platform, const char* source, const char* fileName,
+	    const BNQualifiedNameTypeAndId* existingTypes, size_t existingTypeCount,
+	    const char* const* options, size_t optionCount,
+	    const char* const* includeDirs, size_t includeDirCount,
+	    const char* autoTypeSource, BNTypeParserResult* result,
+	    BNTypeParserError** errors, size_t* errorCount
+	);
+	BINARYNINJACOREAPI bool BNTypeParserParseTypeString(BNTypeParser* parser,
+	    BNPlatform* platform, const char* source,
+	    const BNQualifiedNameTypeAndId* existingTypes, size_t existingTypeCount,
+	    BNQualifiedNameAndType* result,
+	    BNTypeParserError** errors, size_t* errorCount
+	);
+
 	BINARYNINJACOREAPI void BNFreeTypeParserResult(BNTypeParserResult* result);
 	BINARYNINJACOREAPI void BNFreeTypeParserErrors(BNTypeParserError* errors, size_t count);
 	// Updates
