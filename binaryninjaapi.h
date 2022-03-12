@@ -2033,6 +2033,7 @@ namespace BinaryNinja {
 		bool IsTypeAutoDefined(const QualifiedName& name);
 		QualifiedName DefineType(const std::string& id, const QualifiedName& defaultName, Ref<Type> type);
 		void DefineUserType(const QualifiedName& name, Ref<Type> type);
+		void DefineUserTypes(const std::vector<QualifiedNameAndType>& types, std::function<bool(size_t, size_t)> progress = {});
 		void UndefineType(const std::string& id);
 		void UndefineUserType(const QualifiedName& name);
 		void RenameType(const QualifiedName& oldName, const QualifiedName& newName);
