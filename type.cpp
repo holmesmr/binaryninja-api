@@ -451,6 +451,38 @@ TypeDefinitionLine TypeDefinitionLine::FromAPIObject(BNTypeDefinitionLine* line)
 }
 
 
+BNTypeDefinitionLine* TypeDefinitionLine::CreateTypeDefinitionLineList(
+	const std::vector<TypeDefinitionLine>& lines)
+{
+	BNTypeDefinitionLine* result = new BNTypeDefinitionLine[lines.size()];
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		result[i].lineType = lines[i].lineType;
+		result[i].tokens = InstructionTextToken::CreateInstructionTextTokenList(lines[i].tokens);
+		result[i].count = lines[i].tokens.size();
+		result[i].type = BNNewTypeReference(lines[i].type->GetObject());
+		result[i].rootType = BNNewTypeReference(lines[i].rootType->GetObject());
+		result[i].rootTypeName = BNAllocString(lines[i].rootTypeName.c_str());
+		result[i].offset = lines[i].offset;
+		result[i].fieldIndex = lines[i].fieldIndex;
+	}
+	return result;
+}
+
+
+void TypeDefinitionLine::FreeTypeDefinitionLineList(BNTypeDefinitionLine* lines, size_t count)
+{
+	for (size_t i = 0; i < count; ++i)
+	{
+		InstructionTextToken::FreeInstructionTextTokenList(lines[i].tokens, lines[i].count);
+		BNFreeType(lines[i].type);
+		BNFreeType(lines[i].rootType);
+		BNFreeString(lines[i].rootTypeName);
+	}
+	delete[] lines;
+}
+
+
 Type::Type(BNType* type)
 {
 	m_object = type;
