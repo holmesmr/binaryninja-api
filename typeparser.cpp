@@ -90,29 +90,35 @@ bool TypeParser::ParseTypesFromSourceCallback(void* ctxt,
 	result->typeCount = resultCpp.types.size();
 	result->variableCount = resultCpp.variables.size();
 	result->functionCount = resultCpp.functions.size();
-	result->types = new BNQualifiedNameAndType[resultCpp.types.size()];
-	result->variables = new BNQualifiedNameAndType[resultCpp.variables.size()];
-	result->functions = new BNQualifiedNameAndType[resultCpp.functions.size()];
+	result->types = new BNParsedType[resultCpp.types.size()];
+	result->variables = new BNParsedType[resultCpp.variables.size()];
+	result->functions = new BNParsedType[resultCpp.functions.size()];
 
 	size_t n = 0;
 	for (auto& i : resultCpp.types)
 	{
 		result->types[n].name = i.name.GetAPIObject();
-		result->types[n++].type = BNNewTypeReference(i.type->GetObject());
+		result->types[n].type = BNNewTypeReference(i.type->GetObject());
+		result->types[n].isUser = i.isUser;
+		n++;
 	}
 
 	n = 0;
 	for (auto& i : resultCpp.variables)
 	{
 		result->variables[n].name = i.name.GetAPIObject();
-		result->variables[n++].type = BNNewTypeReference(i.type->GetObject());
+		result->variables[n].type = BNNewTypeReference(i.type->GetObject());
+		result->variables[n].isUser = i.isUser;
+		n++;
 	}
 
 	n = 0;
 	for (auto& i : resultCpp.functions)
 	{
 		result->functions[n].name = i.name.GetAPIObject();
-		result->functions[n++].type = BNNewTypeReference(i.type->GetObject());
+		result->functions[n].type = BNNewTypeReference(i.type->GetObject());
+		result->functions[n].isUser = i.isUser;
+		n++;
 	}
 
 	*errorCount = errorsCpp.size();
@@ -279,7 +285,8 @@ bool CoreTypeParser::ParseTypesFromSource(Ref<Platform> platform, const std::str
 	{
 		result.types.push_back({
 			QualifiedName::FromAPIObject(&apiResult.types[j].name),
-			new Type(BNNewTypeReference(apiResult.types[j].type))
+			new Type(BNNewTypeReference(apiResult.types[j].type)),
+			apiResult.types[j].isUser
 		});
 	}
 
@@ -288,7 +295,8 @@ bool CoreTypeParser::ParseTypesFromSource(Ref<Platform> platform, const std::str
 	{
 		result.variables.push_back({
 			QualifiedName::FromAPIObject(&apiResult.variables[j].name),
-			new Type(BNNewTypeReference(apiResult.variables[j].type))
+			new Type(BNNewTypeReference(apiResult.variables[j].type)),
+			apiResult.types[j].isUser
 		});
 	}
 
@@ -297,7 +305,8 @@ bool CoreTypeParser::ParseTypesFromSource(Ref<Platform> platform, const std::str
 	{
 		result.functions.push_back({
 			QualifiedName::FromAPIObject(&apiResult.functions[j].name),
-			new Type(BNNewTypeReference(apiResult.functions[j].type))
+			new Type(BNNewTypeReference(apiResult.functions[j].type)),
+			apiResult.types[j].isUser
 		});
 	}
 

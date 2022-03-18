@@ -2024,11 +2024,18 @@ extern "C"
 		    BNLowLevelILFunction* il, BNRelocation* relocation);
 	};
 
+	struct BNParsedType
+	{
+		BNQualifiedName name;
+		BNType* type;
+		bool isUser;
+	};
+
 	struct BNTypeParserResult
 	{
-		BNQualifiedNameAndType* types;
-		BNQualifiedNameAndType* variables;
-		BNQualifiedNameAndType* functions;
+		BNParsedType* types;
+		BNParsedType* variables;
+		BNParsedType* functions;
 		size_t typeCount, variableCount, functionCount;
 	};
 
@@ -4127,6 +4134,7 @@ extern "C"
 	BINARYNINJACOREAPI BNQualifiedName BNDefineAnalysisType(
 	    BNBinaryView* view, const char* id, BNQualifiedName* defaultName, BNType* type);
 	BINARYNINJACOREAPI void BNDefineUserAnalysisType(BNBinaryView* view, BNQualifiedName* name, BNType* type);
+	BINARYNINJACOREAPI void BNDefineAnalysisTypes(BNBinaryView* view, BNQualifiedNameAndType* types, size_t count, bool (*progress)(void*, size_t, size_t), void* progressContext);
 	BINARYNINJACOREAPI void BNDefineUserAnalysisTypes(BNBinaryView* view, BNQualifiedNameAndType* types, size_t count, bool (*progress)(void*, size_t, size_t), void* progressContext);
 	BINARYNINJACOREAPI void BNUndefineAnalysisType(BNBinaryView* view, const char* id);
 	BINARYNINJACOREAPI void BNUndefineUserAnalysisType(BNBinaryView* view, BNQualifiedName* name);

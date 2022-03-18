@@ -16,13 +16,13 @@ class BINARYNINJAUIAPI CreateTypeDialog : public QDialog
 	QTextEdit* m_errors;
 
 	BinaryViewRef m_data;
-	std::vector<BinaryNinja::QualifiedNameAndType> m_results;
+	std::vector<BinaryNinja::ParsedType> m_results;
 	std::set<BinaryNinja::QualifiedName> m_typesAllowRedefinition;
 
   public:
 	CreateTypeDialog(QWidget* parent, BinaryViewRef data, const QString& title, const QString& definition,
 	    const std::set<BinaryNinja::QualifiedName>& typesAllowRedefinition = {});
-	std::vector<BinaryNinja::QualifiedNameAndType> getResults() { return m_results; }
+	std::vector<BinaryNinja::ParsedType> getResults() { return m_results; }
 
   private Q_SLOTS:
 	void createType();

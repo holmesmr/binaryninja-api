@@ -2038,6 +2038,7 @@ namespace BinaryNinja {
 		QualifiedName GetTypeNameById(const std::string& id);
 		bool IsTypeAutoDefined(const QualifiedName& name);
 		QualifiedName DefineType(const std::string& id, const QualifiedName& defaultName, Ref<Type> type);
+		void DefineTypes(const std::vector<QualifiedNameAndType>& types, std::function<bool(size_t, size_t)> progress = {});
 		void DefineUserType(const QualifiedName& name, Ref<Type> type);
 		void DefineUserTypes(const std::vector<QualifiedNameAndType>& types, std::function<bool(size_t, size_t)> progress = {});
 		void UndefineType(const std::string& id);
@@ -2933,11 +2934,31 @@ namespace BinaryNinja {
 		Ref<Type> type;
 	};
 
+	struct ParsedType
+	{
+		QualifiedName name;
+		Ref<Type> type;
+		bool isUser;
+
+		ParsedType() = default;
+		ParsedType(const std::string& name, const Ref<Type>& type, bool isUser): name(name), type(type), isUser(isUser)
+		{}
+		ParsedType(const QualifiedName& name, const Ref<Type>& type, bool isUser): name(name), type(type), isUser(isUser)
+		{}
+
+		bool operator<(const ParsedType& other) const
+		{
+			if (isUser != other.isUser)
+				return isUser;
+			return name < other.name;
+		}
+	};
+
 	struct TypeParserResult
 	{
-		std::vector<QualifiedNameAndType> types;
-		std::vector<QualifiedNameAndType> variables;
-		std::vector<QualifiedNameAndType> functions;
+		std::vector<ParsedType> types;
+		std::vector<ParsedType> variables;
+		std::vector<ParsedType> functions;
 	};
 
 	struct TypeParserError
